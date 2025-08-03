@@ -4,7 +4,6 @@ from src.db.database import get_print_history, delete_print_history_entry
 from tkinter import messagebox
 import os
 
-
 class HistoryPage:
     def __init__(self, main_window):
         self.main_window = main_window
@@ -29,7 +28,9 @@ class HistoryPage:
         )
         self.history_canvas.configure(yscrollcommand=scrollbar.set)
 
-        self.history_canvas.bind("<MouseWheel>", self.main_window.on_mousewheel)
+        # Прокрутка мышкой — строго через общий обработчик для корректной работы UI
+        self.history_canvas.bind("<Enter>", self.main_window._on_canvas_enter)
+        self.history_canvas.bind("<Leave>", self.main_window._on_canvas_leave)
 
         self.history_canvas.pack(side=LEFT, fill=BOTH, expand=True)
         scrollbar.pack(side=RIGHT, fill=Y)
@@ -146,9 +147,7 @@ class HistoryPage:
                 self.history_body_frame,
                 text="Удалить",
                 style="Print.TButton",
-                command=lambda entry_id=entry[
-                    "id"
-                ], path=pdf_path: self.delete_history_entry(entry_id, path),
+                command=lambda entry_id=entry["id"], path=pdf_path: self.delete_history_entry(entry_id, path),
             ).grid(row=row, column=8, sticky="nsew", padx=1, pady=1)
 
         self.history_canvas.configure(scrollregion=self.history_canvas.bbox("all"))

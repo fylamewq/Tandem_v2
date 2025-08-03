@@ -1,6 +1,7 @@
+from tkinter import ttk
+import tkinter as tk
 import os
 import sys
-
 
 def validate_date(char, current_value, widget):
     """Валидация ввода даты в формате дд.мм.гггг с автоматическим добавлением точек."""
@@ -69,12 +70,9 @@ def copy_text(widget):
 def paste_text(widget):
     """Вставка текста в поля ввода"""
     try:
-        clipboard_text = widget.clipboard_get()
-        if widget.tag_ranges("sel"):
-            widget.delete("sel.first", "sel.last")
-        widget.insert("insert", clipboard_text)
-    except:
-        pass
+        widget.event_generate("<<Paste>>")  # Генерация стандартного события вставки
+    except Exception as e:
+        print(f"[ERROR] Ошибка при вставке: {e}")
 
 
 def cut_text(widget):
@@ -98,3 +96,31 @@ def resource_path(relative_path):
         )
     full_path = os.path.normpath(os.path.join(base_path, relative_path))
     return full_path
+
+def bind_hotkeys(entry: ttk.Entry) -> None:
+    def on_ctrl_key(event):
+        if event.state & 0x4:
+            if event.keycode == 67:  # C/С
+                copy_text(entry)
+                return "break"
+            elif event.keycode == 86:  # V/М
+                paste_text(entry)
+                return "break"
+            elif event.keycode == 88:  # X/Ч
+                cut_text(entry)
+                return "break"
+            elif event.keycode == 65:  # A/Ф
+                select_all(event)
+                return "break"
+    entry.bind("<KeyPress>", on_ctrl_key)
+    
+def create_context_menu(entry):
+    """Создание контекстного меню для поля ввода"""
+    menu = tk.Menu(entry, tearoff=0)
+    menu.add_command(label="Вырезать", command=lambda: cut_text(entry))
+    menu.add_command(label="Копировать", command=lambda: copy_text(entry))
+    menu.add_command(label="Вставить", command=lambda: paste_text(entry))
+    entry.context_menu = menu
+    entry.bind(
+        "<Button-3>", lambda event: menu.tk_popup(event.x_root, event.y_root)
+    )
